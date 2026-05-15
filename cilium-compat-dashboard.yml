@@ -1,0 +1,46 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: cilium-compat-dashboard
+  namespace: monitoring
+  labels:
+    grafana_dashboard: "1"
+data:
+  cilium-compat.json: |
+    {
+      "title": "Cilium Core Metrics (Compatible)",
+      "panels": [
+        {
+          "title": "Flows Processed (total)",
+          "type": "graph",
+          "targets": [
+            { "expr": "sum(rate(hubble_flows_processed_total[5m]))", "legendFormat": "Total Flows" }
+          ],
+          "gridPos": {"h": 8, "w": 12, "x": 0, "y": 0}
+        },
+        {
+          "title": "HTTP Requests by Method",
+          "type": "graph",
+          "targets": [
+            { "expr": "sum(rate(hubble_http_requests_total[5m])) by (method)", "legendFormat": "{{method}}" }
+          ],
+          "gridPos": {"h": 8, "w": 12, "x": 12, "y": 0}
+        },
+        {
+          "title": "Policy Denies (L3/L4)",
+          "type": "graph",
+          "targets": [
+            { "expr": "sum(rate(hubble_drop_total{reason='POLICY_DENIED'}[5m])) by (pod)", "legendFormat": "{{pod}}" }
+          ],
+          "gridPos": {"h": 8, "w": 12, "x": 0, "y": 8}
+        },
+        {
+          "title": "L7 HTTP Denies",
+          "type": "graph",
+          "targets": [
+            { "expr": "sum(rate(hubble_http_requests_total{verdict='DENIED'}[5m])) by (method)", "legendFormat": "{{method}}" }
+          ],
+          "gridPos": {"h": 8, "w": 12, "x": 12, "y": 8}
+        }
+      ]
+    }

@@ -1,0 +1,38 @@
+# L4 策略：只允许 client 访问 nginx-l4 的 TCP 8080
+apiVersion: "cilium.io/v2"
+kind: CiliumNetworkPolicy
+metadata:
+  name: l4-nginx
+spec:
+  endpointSelector:
+    matchLabels:
+      app: nginx-l4
+  ingress:
+  - fromEndpoints:
+    - matchLabels:
+        app: client
+    toPorts:
+    - ports:
+      - port: "8080"
+        protocol: TCP
+---
+# L7 策略：只允许 client 对 http-echo-l7 执行 HTTP GET 方法
+apiVersion: "cilium.io/v2"
+kind: CiliumNetworkPolicy
+metadata:
+  name: l7-http-echo
+spec:
+  endpointSelector:
+    matchLabels:
+      app: http-echo-l7
+  ingress:
+  - fromEndpoints:
+    - matchLabels:
+        app: client
+    toPorts:
+    - ports:
+      - port: "8080"
+        protocol: TCP
+      rules:
+        http:
+        - method: "GET"

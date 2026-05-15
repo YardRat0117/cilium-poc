@@ -1,0 +1,32 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: cilium-simple-dashboard
+  namespace: monitoring
+  labels:
+    grafana_dashboard: "1"
+data:
+  cilium-simple.json: |
+    {
+      "title": "Cilium Simple Dashboard",
+      "panels": [
+        {
+          "title": "Flows Processed",
+          "targets": [
+            { "expr": "sum(rate(hubble_flows_processed_total[5m]))", "legendFormat": "Flows" }
+          ]
+        },
+        {
+          "title": "HTTP Requests (L7)",
+          "targets": [
+            { "expr": "sum(rate(hubble_http_requests_total[5m])) by (method)", "legendFormat": "{{method}}" }
+          ]
+        },
+        {
+          "title": "Policy Drops",
+          "targets": [
+            { "expr": "sum(rate(hubble_drop_total{reason='POLICY_DENIED'}[5m]))", "legendFormat": "Policy Denies" }
+          ]
+        }
+      ]
+    }

@@ -1,0 +1,34 @@
+# kube-prometheus-stack values for non-persistent testing
+prometheus:
+  prometheusSpec:
+    storageSpec: null
+    serviceMonitorSelectorNilUsesHelmValues: false
+    resources:
+      requests:
+        cpu: 200m
+        memory: 512Mi
+      limits:
+        cpu: 500m
+        memory: 1Gi
+  service:
+    type: ClusterIP
+    port: 9091
+alertmanager:
+  enabled: false
+grafana:
+  adminPassword: admin
+  persistence:
+    enabled: false
+  service:
+    type: ClusterIP
+  sidecar:
+    datasources:
+      enabled: true
+    dashboards:
+      enabled: true
+kubeStateMetrics:
+  enabled: true
+nodeExporter:
+  enabled: true
+  tolerations:
+    - operator: Exists
