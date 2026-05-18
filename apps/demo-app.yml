@@ -61,7 +61,7 @@ spec:
   ports:
   - port: 8080
 ---
-# 客户端：持续发送 HTTP 请求
+# HTTP 客户端
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -85,6 +85,66 @@ spec:
           while true; do
             curl -s http://nginx-l4:8080 > /dev/null
             curl -s -X GET http://http-echo-l7:8080 > /dev/null
-            curl -s -X POST http://http-echo-l7:8080 > /dev/null   # 会被 L7 策略拒绝
+            curl -s -X POST http://http-echo-l7:8080 > /dev/null
             sleep 3
+          done
+---
+# gRPC 服务端
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: grpc-server
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: grpc-server
+  template:
+    metadata:
+      labels:
+        app: grpc-server
+    spec:
+      containers:
+      - name: server
+        image: docker.io/moul/grpcbin:latest
+        ports:
+        - containerPort: 9000
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: grpc-server
+spec:
+  selector:
+    app: grpc-server
+  ports:
+  - name: grpc
+    port: 9000
+    targetPort: 9000
+---
+# gRPC 客户端（使用自定义镜像）
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: grpc-client
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: grpc-client
+  template:
+    metadata:
+      labels:
+        app: grpc-client
+    spec:
+      containers:
+      - name: client
+        image: cilium-poc-grpcurl:latest
+        imagePullPolicy: IfNotPresent
+        command: ["/bin/sh", "-c"]
+        args:
+        - |
+          while true; do
+            grpcurl -plaintext grpc-server:9000 grpcbin.GRPCBin/Echo
+            sleep 5
           done

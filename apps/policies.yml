@@ -36,3 +36,25 @@ spec:
       rules:
         http:
         - method: "GET"
+---
+# L7 策略：只允许 grpc-client 调用 grpc-server 的 Echo 方法
+apiVersion: "cilium.io/v2"
+kind: CiliumNetworkPolicy
+metadata:
+  name: l7-grpc-echo
+spec:
+  endpointSelector:
+    matchLabels:
+      app: grpc-server
+  ingress:
+  - fromEndpoints:
+    - matchLabels:
+        app: grpc-client
+    toPorts:
+    - ports:
+      - port: "9000"
+        protocol: TCP
+      rules:
+        l7proto: "grpc"
+        l7:
+        - method: "/grpcbin.GRPCBin/Echo"
