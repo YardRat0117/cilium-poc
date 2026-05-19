@@ -1,4 +1,4 @@
-# L4 测试服务：nginx
+# L4 测试服务：nginx (调度到 worker1)
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -13,6 +13,8 @@ spec:
       labels:
         app: nginx-l4
     spec:
+      nodeSelector:
+        http-node: "true"
       containers:
       - name: nginx
         image: quay.io/nginx/nginx-unprivileged:latest
@@ -29,7 +31,7 @@ spec:
   ports:
   - port: 8080
 ---
-# L7 测试服务：http-echo
+# L7 测试服务：http-echo (调度到 worker1)
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -44,6 +46,8 @@ spec:
       labels:
         app: http-echo-l7
     spec:
+      nodeSelector:
+        http-node: "true"
       containers:
       - name: echo
         image: hashicorp/http-echo:latest
@@ -61,7 +65,7 @@ spec:
   ports:
   - port: 8080
 ---
-# HTTP 客户端
+# HTTP 客户端 (调度到 control-plane)
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -76,6 +80,12 @@ spec:
       labels:
         app: client
     spec:
+      nodeSelector:
+        node-role.kubernetes.io/control-plane: ""
+      tolerations:
+      - key: "node-role.kubernetes.io/control-plane"
+        operator: "Exists"
+        effect: "NoSchedule"
       containers:
       - name: curl
         image: quay.io/cilium/alpine-curl:v1.10.0
@@ -89,7 +99,7 @@ spec:
             sleep 3
           done
 ---
-# gRPC 服务端
+# gRPC 服务端 (调度到 worker2)
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -104,6 +114,8 @@ spec:
       labels:
         app: grpc-server
     spec:
+      nodeSelector:
+        grpc-node: "true"
       containers:
       - name: server
         image: docker.io/moul/grpcbin:latest
@@ -122,7 +134,7 @@ spec:
     port: 9000
     targetPort: 9000
 ---
-# gRPC 客户端（使用自定义镜像）
+# gRPC 客户端 (调度到 control-plane)
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -137,9 +149,15 @@ spec:
       labels:
         app: grpc-client
     spec:
+      nodeSelector:
+        node-role.kubernetes.io/control-plane: ""
+      tolerations:
+      - key: "node-role.kubernetes.io/control-plane"
+        operator: "Exists"
+        effect: "NoSchedule"
       containers:
       - name: client
-        image: cilium-poc-grpcurl:latest
+        image: my-grpcurl:latest
         imagePullPolicy: IfNotPresent
         command: ["/bin/sh", "-c"]
         args:
