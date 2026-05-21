@@ -40,7 +40,7 @@ kubectl get nodes --show-labels | grep -E "NAME|http-node|grpc-node"
 
 # 4. 构建自定义 grpcurl 镜像
 echo ">>> 构建 my-grpcurl 镜像"
-docker build -t my-grpcurl:latest -f "$ROOT_DIR/grpcurl.Dockerfile" .
+docker build --network=host -t my-grpcurl:latest -f "$ROOT_DIR/grpcurl.Dockerfile" .
 
 # 5. 加载镜像到 Kind 所有节点
 echo ">>> 加载镜像到 Kind 节点"
